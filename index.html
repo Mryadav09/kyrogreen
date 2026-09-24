@@ -1,1 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+    <link href='https://fonts.googleapis.com/css2?family=Audiowide&family=Montserrat:wght@800;900&family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap' rel='stylesheet'>
+    <style>
+        :root { --gn-glow: #00ff2a; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'Share Tech Mono', monospace; background-color: #000; }
+        
+        /* Background Iframe */
+        #bg-iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 1; display: none; }
 
+        /* Login Screen */
+        #login-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #001105; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .log-title { font-family: 'Montserrat', sans-serif; color: #00ff2a; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 15px #00ff2a; margin-bottom: 25px; }
+        #pass-input { background: #000; border: 2px solid #00ff2a; border-radius: 12px; color: #fff; padding: 12px; font-size: 16px; text-align: center; outline: none; margin-bottom: 20px; font-family: 'Orbitron', sans-serif; box-shadow: inset 0 0 10px rgba(0,255,42,0.3); width: 220px; }
+        #pass-btn { background: linear-gradient(180deg, #00d020, #006010); border: 2px solid #00ff2a; color: #fff; padding: 12px 30px; font-family: 'Montserrat', sans-serif; font-weight: 900; border-radius: 12px; font-size: 14px; cursor: pointer; box-shadow: 0 0 15px rgba(0,255,42,0.5); }
+        #pass-btn:active { transform: scale(0.95); }
+        #err-msg { color: #ff3333; margin-top: 15px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 800; display: none; text-shadow: 0 0 10px #ff0000; }
+
+        /* Animations */
+        @keyframes flowGreen { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes toolGlow { 
+           0% { box-shadow: 0 0 10px rgba(0,255,42,0.3), inset 0 0 20px rgba(0,255,42,0.3); border-color: #00ff2a; } 
+           50% { box-shadow: 0 0 30px rgba(0,255,42,0.8), inset 0 0 40px rgba(0,255,42,0.8); border-color: #88ff88; } 
+           100% { box-shadow: 0 0 10px rgba(0,255,42,0.3), inset 0 0 20px rgba(0,255,42,0.3); border-color: #00ff2a; } 
+        }
+        @keyframes glassShine { 0% { left: -150%; } 20% { left: 150%; } 100% { left: 150%; } }
+
+        /* Main Tool Box */
+        #main {
+            width: 235px; height: 300px;
+            background: linear-gradient(135deg, #001105, #007722, #001105, #00aa33); background-size: 300% 300%;
+            animation: flowGreen 5s ease infinite, toolGlow 2s infinite ease-in-out;
+            border: 2px solid #00ff2a; border-radius: 30px;
+            display: none; flex-direction: column; padding: 12px; z-index: 50; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: hidden; touch-action: none;
+        }
+        .glass-reflection { position: absolute; top: 0; left: -150%; width: 150%; height: 100%; background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), rgba(0, 255, 42, 0.5), transparent); transform: skewX(-30deg); animation: glassShine 4s infinite; z-index: 1; pointer-events: none; border-radius: 30px; overflow: hidden; }
+        .header-box, .status-bar, #box-content, #btn-content { z-index: 2; position: relative; }
+        .header-box { width: 100%; background: linear-gradient(90deg, #001105, #00330f, #001105); border: 1.5px solid #00ff2a; border-radius: 20px; display: flex; align-items: center; justify-content: center; padding: 8px 0; margin-bottom: 10px; box-shadow: inset 0 0 15px rgba(0,255,42,0.3); }
+        .h-text { font-family: 'Montserrat', sans-serif; color: #ffffff; font-size: 17px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 10px #00ff2a, 0 0 20px #00ff2a; text-transform: uppercase; }
+        .status-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 8px; gap: 4px; }
+        .s-pill { border: 1.5px solid rgba(0,255,42,0.3); border-radius: 15px; padding: 3px 8px; background: #000000; color: #00ff2a; font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 1px; box-shadow: inset 0 0 8px rgba(0,255,42,0.1); white-space: nowrap; }
+        .s-pill span { color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+        #box-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; position: relative; }
+        .hud-box { width: 100%; height: 100%; border: 1.5px solid #228b3d; border-radius: 18px; background: linear-gradient(180deg, #02180a, #000a03); box-shadow: inset 0 0 20px rgba(0,255,100,0.1); padding: 8px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+        .hud-top { text-align: right; width: 100%; }
+        .signal-text { font-family: 'Rajdhani', sans-serif; font-size: 9px; color: #4dc5a2; font-weight: 700; letter-spacing: 1.5px; display: inline-flex; align-items: center; gap: 4px; text-shadow: 0 0 5px rgba(77,197,162,0.5); }
+        .signal-dot { width: 5px; height: 5px; background: #6df459; border-radius: 50%; box-shadow: 0 0 8px #6df459; }
+        .hud-mid { display: flex; flex: 1; align-items: center; justify-content: space-between; width: 100%; margin: 5px 0; }
+        .sphere-wrap { position: relative; width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; }
+        .bg-octagon-outer { position: absolute; width: 100%; height: 100%; background: rgba(0,255,42,0.08); clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%); z-index: 1; border: 1px solid rgba(0,255,42,0.3); }
+        .oct-bracket-top { position: absolute; top: -1px; left: 25%; width: 50%; height: 2px; background: #88ff88; z-index: 2; box-shadow: 0 0 5px #00ff2a; }
+        .oct-bracket-bot { position: absolute; bottom: -1px; left: 25%; width: 50%; height: 2px; background: #88ff88; z-index: 2; box-shadow: 0 0 5px #00ff2a; }
+        .oct-bot-diamond { position: absolute; bottom: -5px; left: 47%; width: 6px; height: 8px; background: #ffffff; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); z-index: 2; box-shadow: 0 0 5px #fff; }
+        .sphere-glow { position: absolute; width: 85%; height: 85%; background: radial-gradient(circle at 35% 35%, #5dfd5d 0%, #0d6e27 80%); border-radius: 50%; box-shadow: inset -5px -5px 15px rgba(0,0,0,0.7), 0 0 10px rgba(0,255,42,0.4); z-index: 2; overflow: hidden; }
+        .sphere-left-accent { position: absolute; width: 30%; height: 50%; background: #ffffff; border-radius: 50%; top: 25%; left: -15%; opacity: 0.9; z-index: 3; }
+        .sphere-right-accent { position: absolute; width: 30%; height: 50%; background: #ffffff; border-radius: 50%; top: 25%; right: -15%; opacity: 0.9; z-index: 3; }
+        .sphere-top-accent { position: absolute; width: 50%; height: 30%; background: #ffffff; border-radius: 50%; top: -15%; left: 25%; opacity: 0.9; z-index: 3; }
+        .sphere-bot-accent { position: absolute; width: 50%; height: 30%; background: #ffffff; border-radius: 50%; bottom: -15%; left: 25%; opacity: 0.9; z-index: 3; }
+        .sphere-val { position: relative; width: 85%; height: 85%; background: transparent; display: flex; align-items: center; justify-content: center; z-index: 10; border: none; outline: none; overflow: visible; }
+        .sphere-val img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.9)); border: none; }
+        .sphere-val span { font-family: 'Montserrat', sans-serif; font-size: 30px; font-weight: 900; color: #ffffff; text-shadow: 0 0 10px rgba(0,255,42,0.8); }
+        .ring-h { position: absolute; width: 135%; height: 40%; border: 1.5px solid #00ff2a; border-radius: 50%; z-index: 6; transform: rotateZ(-15deg); opacity: 0.8; box-shadow: 0 0 5px #00ff2a; }
+        .ring-v { position: absolute; width: 40%; height: 135%; border: 1.5px solid #00ffff; border-radius: 50%; z-index: 6; transform: rotateZ(-15deg); opacity: 0.6; box-shadow: 0 0 5px #00ffff; }
+        .hud-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; width: 55%; }
+        .size-box-cyan { background: linear-gradient(180deg, #51c4ef 0%, #1783b9 100%); color: #ffffff; border: 1px solid #7be3ff; border-radius: 12px; width: 100%; padding: 5px 0; font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); text-align: center; box-shadow: inset 0 3px 5px rgba(255,255,255,0.4); margin-bottom: 6px; }
+        .sync-row { display: flex; align-items: center; justify-content: space-between; width: 100%; color: #ffffff; font-size: 9px; margin-bottom: 5px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
+        .s-bar-bg { flex: 1; height: 5px; background: #000000; margin: 0 6px; border-radius: 3px; border: 1px solid #333; position: relative; overflow: hidden; }
+        .s-bar-fill { width: 99%; height: 100%; background: linear-gradient(90deg, #00ffff, #e0ff00); }
+        .sync-row span { color: #e0ff00; font-weight: 900; text-shadow: 0 0 5px #e0ff00; }
+        .mode-row { display: flex; align-items: center; justify-content: space-between; width: 100%; font-family: 'Orbitron', sans-serif; font-size: 7px; color: #ffffff; letter-spacing: 1px; padding: 0 5px; text-align: left; }
+        .m-col { display: flex; flex-direction: column; align-items: flex-start; }
+        .m-col span { font-size: 9px; font-weight: 900; color: #57ff64; text-shadow: 0 0 5px #57ff64; margin-top: 1px; }
+        .hud-bot { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; color: #ffffff; font-family: 'Orbitron', sans-serif; font-size: 8px; letter-spacing: 2px; font-weight: 900; padding-top: 3px; }
+        .bot-line { flex: 1; height: 1px; background: #4dc5a2; opacity: 0.5; margin: 0 8px; }
+        
+        /* Background Box image path */
+        .bg-box-img { background: url('box.png') no-repeat center center; background-size: 100% 100%; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; margin: 0; position: absolute; top: 0; left: 0; border-radius: 16px; z-index: 5; box-sizing: border-box; }
+        .msg-title { position: relative; z-index: 10; font-size: 15px; font-family: 'Montserrat', sans-serif; font-weight: 900; color: #ff3333; text-shadow: 0 0 10px #ff0000; margin-bottom: 6px; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .msg-title.green { color: #00ff2a; text-shadow: 0 0 10px #00ff2a; }
+        .msg-sub { position: relative; z-index: 10; font-size: 10px; font-family: 'Montserrat', sans-serif; font-weight: 800; color: #fff; text-align: center; letter-spacing: 1px; line-height: 1.5; text-transform: uppercase; }
+        .msg-sub span { color: #00ff2a; font-weight: 900; text-shadow: 0 0 5px rgba(0,255,42,0.4); }
+        #btn-content { display: flex; gap: 8px; width: 100%; height: 38px; margin-top: 10px; }
+        .btn { border-radius: 20px; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.1s; color: #fff; z-index: 60; position: relative;}
+        .btn:active { transform: scale(0.95); }
+        .btn-exe { flex: 1.3; background: linear-gradient(180deg, #00d020, #006010); border: 2px solid #00ff2a; box-shadow: inset 0 0 15px rgba(0,255,42,0.5); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .btn-exe::before { content:'►'; font-size:8px; margin-right:4px; }
+        .btn-cls { flex: 0.7; background: #000000; border: 1.5px solid rgba(0,255,42,0.3); box-shadow: inset 0 0 10px rgba(0,255,42,0.1); }
+        
+        /* Floating Mini Logo */
+        #mini { width: 60px; height: 60px; border-radius: 50%; display: none; align-items: center; justify-content: center; position: absolute; top: 15%; left: 80%; cursor: pointer; background: #001105; border: 2px solid #00ff2a; box-shadow: 0 0 15px rgba(0,255,42,0.6); z-index:50; overflow:hidden; touch-action: none; }
+        #mini img { width: 100%; height: 100%; object-fit: cover; z-index: 2; border-radius: 50%; opacity: 0.9; }
+        #mini::after { content:''; position:absolute; width:100%; height:100%; border-radius:50%; box-shadow:inset 0 0 15px rgba(0,255,42,0.8); z-index:3; pointer-events:none; }
+    </style>
+</head>
+<body>
+
+    <!-- 🚀 LOGIN SCREEN 🚀 -->
+    <div id="login-screen">
+        <div class="log-title">SYSTEM SECURED</div>
+        <input type="password" id="pass-input" placeholder="ENTER PASSWORD">
+        <button id="pass-btn" onclick="checkLogin()">AUTHENTICATE</button>
+        <div id="err-msg">INCORRECT PASSWORD</div>
+    </div>
+
+    <!-- 🚀 BACKGROUND WEBSITE 🚀 -->
+    <iframe id="bg-iframe" src="https://www.veergame28.com/#/login"></iframe>
+
+    <!-- 🚀 MINI FLOATING LOGO 🚀 -->
+    <div id='mini'>
+        <!-- Error tag hata diya hai jisse aapka logo perfectly load ho sake -->
+        <img src='logo.png' alt='logo'>
+    </div>
+
+    <!-- 🚀 MAIN PANEL 🚀 -->
+    <div id='main'>
+        <div class='glass-reflection'></div>
+        <div class='header-box'><div class='h-text'>GOD X PANEL</div></div>
+        <div class='status-bar'>
+            <div class='s-pill'>SYS: <span>ARMED</span></div>
+            <div class='s-pill'>CORE: <span>SYNC</span></div>
+            <div class='s-pill'>PING: <span id='live-ping'>15MS</span></div>
+        </div>
+        <div id='box-content'></div>
+        <div id='btn-content'></div>
+    </div>
+
+    <script>
+        var state = 'ready'; 
+        var isScanning = false; 
+        var currentResultSz = 'SMALL'; 
+        var currentResultNum = '3'; 
+        var currentPeriod = null; 
+        var lastGeneratedLivePeriod = null; 
+        var pendingResult = null; 
+        var isOpen = false; 
+
+        var closeBtnHtml = '<div class="btn btn-cls" onclick="closeM()">X CLOSE</div>';
+        
+        var numImg = function(n) { return '<img src="num_' + n + '.png" onerror="this.style.display=\'none\';">'; };
+
+        setInterval(function(){ 
+            var pt = document.getElementById('live-ping'); 
+            if(pt){ pt.innerText = (Math.floor(Math.random() * 20) + 12) + 'MS'; } 
+        }, 1500);
+
+        // 🚀 LOGIN LOGIC 🚀
+        function checkLogin() {
+            var pass = document.getElementById('pass-input').value;
+            if (pass === "DARK") {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('bg-iframe').style.display = 'block';
+                document.getElementById('mini').style.display = 'flex';
+                render();
+            } else {
+                document.getElementById('err-msg').style.display = 'block';
+            }
+        }
+        
+        function getP(){ 
+            var d = new Date(); d.setSeconds(d.getSeconds() + 2); 
+            var utc = new Date(d.toLocaleString('en-US', {timeZone: 'UTC'})); 
+            utc.setMinutes(utc.getMinutes() + 330); 
+            var total = utc.getUTCHours() * 60 + utc.getUTCMinutes(); 
+            var periodSuffix = String(10001 + total); 
+            return periodSuffix.slice(-5); 
+        }
+
+        function openM(){ 
+            if(isOpen) return; 
+            isOpen = true; 
+            document.getElementById('main').style.display='flex'; 
+            document.getElementById('mini').style.display='none'; 
+            render(); 
+        }
+
+        function closeM(){ 
+            isOpen = false; 
+            document.getElementById('main').style.display='none'; 
+            document.getElementById('mini').style.display='flex'; 
+        }
+
+        // 🚀 ACTION & RESULT LOGIC 🚀
+        function actionClick() { 
+            if(!isScanning) { 
+                var currentLivePeriod = getP(); 
+                if(lastGeneratedLivePeriod === currentLivePeriod) { 
+                    if(state !== 'result') { state = 'result'; render(); } 
+                } else { 
+                    isScanning = true; lastGeneratedLivePeriod = currentLivePeriod; pendingResult = null; 
+                    fetch('https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json') 
+                    .then(function(res){ return res.json(); }) 
+                    .then(function(data){ 
+                        var last = data.data.list[0]; 
+                        var n = parseInt(last.number); 
+                        var sz = (n <= 4) ? 'SMALL' : 'BIG'; 
+                        var p = String(last.issueNumber); 
+                        pendingResult = { n: n, sz: sz, p: p }; 
+                    }).catch(function(e){ pendingResult = { n: 0, sz: 'ERROR', p: '00000' }; }); 
+                    state = 'scanning'; render(); 
+                } 
+            } 
+        }
+
+        function triggerResult() { 
+            if(pendingResult) { 
+                currentResultNum = pendingResult.n; currentResultSz = pendingResult.sz; currentPeriod = pendingResult.p; 
+            } else { 
+                currentResultSz = 'WAIT'; 
+            } 
+            state = 'result'; isScanning = false; render(); 
+        }
+
+        // Animation Fix: Particle Canvas tool ke andar center me kar diya gaya
+        window.startParticleAnimation = function() { 
+            var cv = document.createElement('canvas'); 
+            cv.id = 'pblCanvas'; 
+            cv.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:99;pointer-events:none;border-radius:30px;'; 
+            document.getElementById('main').appendChild(cv); 
+            
+            var ctx = cv.getContext('2d'); var CFG = { count: 200, attractMs: 2200, explodeMs: 800, palette: ['#39FF14', '#00FFA3', '#7CFF3C', '#00E5B0', '#D9FFC9'], onFinish: function(){ cv.remove(); triggerResult(); } }; 
+            var W, H, cx, cy, R, FAR, parts = []; var progress = 0, burst = -1; 
+            function resize() { var dpr = Math.min(window.devicePixelRatio || 1, 2); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); cx = W / 2; cy = H / 2; R = W * 0.25; FAR = Math.max(W, H) * 1.5; } resize(); 
+            var rnd = Math.random; for (var i = 0; i < CFG.count; i++) { var sa = rnd() * Math.PI * 2, sd = FAR * (0.55 + rnd() * 0.55); parts.push({ sx: cx + Math.cos(sa) * sd, sy: cy + Math.sin(sa) * sd, x: 0, y: 0, vx: 0, vy: 0, ta: rnd() * Math.PI * 2, tr: Math.sqrt(rnd()) * R, delay: rnd() * 0.35, r: 1.6 + rnd() * 3.4, a: 1, c: CFG.palette[Math.floor(rnd() * CFG.palette.length)] }); } 
+            for(var i=0; i<parts.length; i++){ parts[i].x = parts[i].sx; parts[i].y = parts[i].sy; } var t0 = null, e0 = null, last = null, reqId = null; 
+            function frame(now) { if (t0 === null) t0 = now; if (burst < 0) { progress = Math.min(1, (now - t0) / CFG.attractMs); var t = progress, spin = t * t * 3.4; for (var i=0; i<parts.length; i++) { var p = parts[i]; var local = Math.max(0, Math.min(1, (t - p.delay) / (1 - p.delay))); var e = 1 - Math.pow(1 - local, 3); var a = p.ta + spin; p.x = p.sx + (cx + Math.cos(a) * p.tr - p.sx) * e; p.y = p.sy + (cy + Math.sin(a) * p.tr - p.sy) * e; p.a = 0.25 + 0.75 * e; } if (t >= 1) { burst = 0; e0 = now; last = now; for (var i=0; i<parts.length; i++) { var p = parts[i]; var dx = p.x - cx, dy = p.y - cy; var d = Math.max(1, Math.sqrt(dx*dx + dy*dy)); var s = FAR * (1.1 + rnd() * 2.2); p.vx = dx / d * s + (rnd() - 0.5) * FAR * 0.4; p.vy = dy / d * s + (rnd() - 0.5) * FAR * 0.4; } } } else { var dt = Math.min(0.05, (now - last) / 1000); last = now; burst = Math.min(1, (now - e0) / CFG.explodeMs); var drag = Math.pow(0.94, dt * 60); for (var i=0; i<parts.length; i++) { var p = parts[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += FAR * 0.9 * dt; p.vx *= drag; p.vy *= drag; p.a = Math.pow(1 - burst, 1.6); p.r *= (1 - 0.35 * dt); } } draw(); if (burst >= 1) { CFG.onFinish(); return; } reqId = requestAnimationFrame(frame); } 
+            function draw() { ctx.clearRect(0, 0, W, H); var exploding = burst >= 0; var ca = exploding ? Math.max(0, 1 - burst * 4) : progress; var cs = exploding ? 1 + burst * 6 : 0.4 + progress * 0.6; if (ca > 0.01) { var rad = R * 1.9 * cs; var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad); g.addColorStop(0, 'rgba(226,255,214,'+(0.9 * ca)+')'); g.addColorStop(0.35, 'rgba(57,255,20,'+(0.55 * ca)+')'); g.addColorStop(0.7, 'rgba(0,255,163,'+(0.22 * ca)+')'); g.addColorStop(1, 'rgba(0,255,163,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 7); ctx.fill(); } if (exploding && burst < 0.6) { var k = burst / 0.6; ctx.strokeStyle = 'rgba(140,255,120,'+((1 - k) * 0.6)+')'; ctx.lineWidth = (1 - k) * 14 + 1; ctx.beginPath(); ctx.arc(cx, cy, R + k * FAR * 0.9, 0, 7); ctx.stroke(); } ctx.globalCompositeOperation = 'lighter'; for (var i=0; i<parts.length; i++) { var p = parts[i]; if (p.a <= 0.01 || p.r <= 0.2) continue; ctx.globalAlpha = Math.max(0, Math.min(1, p.a)); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; } reqId = requestAnimationFrame(frame); 
+        };
+
+        function render(){ 
+            var box = document.getElementById('box-content'); 
+            var btn = document.getElementById('btn-content'); 
+            if(!box || !btn) return; 
+
+            if(state=='ready'){ 
+                box.innerHTML='<div class="hud-box" style="padding:0; border:none; background:transparent; box-shadow:none;"><div class="bg-box-img"><div class="msg-title green">SYSTEM OPERATIONAL</div><div class="msg-sub">PREMIUM BYPASS ACTIVE<br>SECURE UPLINK ESTABLISHED<br><br><span>READY TO SCAN</span></div></div></div>'; 
+                btn.innerHTML='<div class="btn btn-exe" onclick="actionClick()">INJECT HACK</div>'+closeBtnHtml; 
+            } 
+            else if(state=='scanning'){ 
+                box.innerHTML='<div class="hud-box"><div class="hud-top"><div class="signal-text"><div class="signal-dot" style="background:#ff3333;box-shadow:none;"></div> DECRYPTING...</div></div><div class="hud-mid"><div class="sphere-wrap"><div class="bg-octagon-outer"></div><div class="oct-bracket-top"></div><div class="oct-bracket-bot"></div><div class="oct-bot-diamond"></div><div class="sphere-glow"><div class="sphere-left-accent"></div><div class="sphere-right-accent"></div><div class="sphere-top-accent"></div><div class="sphere-bot-accent"></div></div><div class="ring-h"></div><div class="ring-v"></div><div class="sphere-val" style="color:#ff0000"><span>?</span></div></div><div class="hud-right"><div class="size-box-cyan" style="background:linear-gradient(180deg,#555,#222);border-color:#777;box-shadow:none;">SCAN</div><div class="sync-row">SYNC <div class="s-bar-bg"><div class="s-bar-fill" style="width:40%; animation: loadBar 3.5s ease forwards;"></div></div> <span id="sync-pct">40%</span></div><div class="mode-row"><div class="m-col">MODE<span style="color:#fff;text-shadow:none;">SCAN</span></div><div class="m-col">CORE<span style="color:#ff3333;text-shadow:none;">WAIT</span></div></div></div></div><div class="hud-bot"><div class="bot-line"></div>PERIOD: LOAD<div class="bot-line"></div></div></div><style>@keyframes loadBar{0%{width:0%;}100%{width:99%;}}</style>'; 
+                btn.innerHTML='<div class="btn btn-exe" style="background:#001105;border-color:rgba(0,255,42,0.3);color:#666;box-shadow:none;">SCANNING...</div>'+closeBtnHtml; 
+                clearInterval(window.sInt); var c=0; 
+                window.sInt=setInterval(function(){ c+=15; var st=document.getElementById('sync-pct'); if(st && c<=99) st.innerText=c+'%'; }, 500); 
+                setTimeout(window.startParticleAnimation, 50); 
+            } 
+            else if(state=='result'){ 
+                var last5 = (currentPeriod && currentPeriod !== 'ERROR') ? currentPeriod.slice(-5) : '00000'; 
+                box.innerHTML='<div class="hud-box"><div class="hud-top"><div class="signal-text"><div class="signal-dot"></div> SIGNAL LOCKED</div></div><div class="hud-mid"><div class="sphere-wrap"><div class="bg-octagon-outer"></div><div class="oct-bracket-top"></div><div class="oct-bracket-bot"></div><div class="oct-bot-diamond"></div><div class="sphere-glow"><div class="sphere-left-accent"></div><div class="sphere-right-accent"></div><div class="sphere-top-accent"></div><div class="sphere-bot-accent"></div></div><div class="ring-h"></div><div class="ring-v"></div><div class="sphere-val">'+numImg(currentResultNum)+'</div></div><div class="hud-right"><div class="size-box-cyan">'+currentResultSz+'</div><div class="sync-row">SYNC <div class="s-bar-bg"><div class="s-bar-fill"></div></div> <span>99%</span></div><div class="mode-row"><div class="m-col">MODE<span>APEX</span></div><div class="m-col">CORE<span>OK</span></div></div></div></div><div class="hud-bot"><div class="bot-line"></div>PERIOD: '+last5+'<div class="bot-line"></div></div></div>'; 
+                btn.innerHTML='<div class="btn btn-exe" onclick="actionClick()">EXECUTE CODE</div>'+closeBtnHtml; 
+            } 
+        }
+
+        // 🚀 DRAG LOGIC (Fixed for no-jump center drag) 🚀
+        function makeDraggable(el) {
+            var isDragging = false, startX, startY, initialX, initialY;
+            
+            el.addEventListener('touchstart', dragStart, {passive: false});
+            el.addEventListener('mousedown', dragStart);
+
+            function dragStart(e) {
+                if(e.target.closest('.btn')) return; // Allow button clicks
+                
+                isDragging = false;
+                if (e.type === 'touchstart') {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                } else {
+                    startX = e.clientX;
+                    startY = e.clientY;
+                }
+                
+                // Get exact screen coordinates before removing transform
+                var rect = el.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+
+                // Remove transform and lock position to prevent jumping
+                if(el.style.transform !== 'none') {
+                    el.style.transform = 'none';
+                    el.style.left = initialX + 'px';
+                    el.style.top = initialY + 'px';
+                }
+
+                document.addEventListener('touchmove', dragMove, {passive: false});
+                document.addEventListener('mousemove', dragMove);
+                document.addEventListener('touchend', dragEnd);
+                document.addEventListener('mouseup', dragEnd);
+            }
+
+            function dragMove(e) {
+                var currentX, currentY;
+                if (e.type === 'touchmove') {
+                    currentX = e.touches[0].clientX;
+                    currentY = e.touches[0].clientY;
+                } else {
+                    currentX = e.clientX;
+                    currentY = e.clientY;
+                }
+                
+                // If moved more than 5px, it's a drag
+                if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
+                    isDragging = true;
+                    e.preventDefault(); // Stop background scroll
+                    el.style.left = (initialX + (currentX - startX)) + 'px';
+                    el.style.top = (initialY + (currentY - startY)) + 'px';
+                }
+            }
+
+            function dragEnd(e) {
+                document.removeEventListener('touchmove', dragMove);
+                document.removeEventListener('mousemove', dragMove);
+                document.removeEventListener('touchend', dragEnd);
+                document.removeEventListener('mouseup', dragEnd);
+                
+                // If it wasn't dragged and it's the mini logo, open the tool
+                if (!isDragging && el.id === 'mini') {
+                    openM();
+                }
+            }
+        }
+
+        // Apply Draggable to both Tool & Logo
+        makeDraggable(document.getElementById('mini'));
+        makeDraggable(document.getElementById('main'));
+
+    </script>
+</body>
+</html>
